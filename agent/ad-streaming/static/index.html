@@ -169,7 +169,13 @@
     <script>
       // WebSocket connection and logic
       const sessionId = Math.random().toString().substring(10);
-      const ws_url = "ws://" + window.location.host + "/ws/" + sessionId;
+      
+      // Determine protocol and host for WebSocket connection
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      const ws_url = protocol + "//" + host + "/ws/" + sessionId;
+      
+      console.log("Connecting to WebSocket:", ws_url);
       let ws = new WebSocket(ws_url);
 
       const messageForm = document.getElementById("messageForm");
