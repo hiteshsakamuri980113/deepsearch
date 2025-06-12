@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: deepsearch-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: GOOGLE_GENAI_USE_VERTEXAI
+        value: FALSE
+      - key: GOOGLE_API_KEY
+        sync: false # Set this in Render dashboard
+      - key: SPOTIFY_CLIENT_ID
+        sync: false # Set this in Render dashboard
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false # Set this in Render dashboard
+      - key: REFRESH_TOKEN
+        sync: false # Set this in Render dashboard
+      - key: SPOTIFY_ACCESS_TOKEN
+        sync: false # Set this in Render dashboard
