@@ -84,7 +84,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",  # Local development
         "https://*.vercel.app",   # Vercel deployments
-        "https://deepsearch-nextjs.vercel.app",  # Your specific Vercel domain (update this)
+        "https://deepsearch-rose.vercel.app",  # Your specific Vercel domain (update this)
     ],
     allow_credentials=True,
     allow_methods=["*"],
