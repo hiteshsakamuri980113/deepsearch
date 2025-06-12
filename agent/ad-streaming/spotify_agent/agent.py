@@ -7,28 +7,40 @@ import requests
 import time
 from dotenv import load_dotenv
 
-# Global variables for token management
+# Import token functions from main module
+try:
+    from main import get_current_access_token
+except ImportError:
+    # Fallback for local development
+    def get_current_access_token():
+        load_dotenv(override=True)
+        return os.getenv("SPOTIFY_ACCESS_TOKEN")
+
+# Global variables for token management (legacy, for fallback)
 _last_token_reload_time = 0
 _token_reload_interval = 5  # Reload token every 5 seconds
 
 def get_latest_access_token():
     """
-    Gets the latest access token from the .env file
-    Reloads the .env file each time to ensure latest value is used
-    Implements caching to avoid excessive file I/O
+    Gets the latest access token - now uses the improved token management
+    Falls back to old method if new method is not available
     """
-    global _last_token_reload_time
-    
-    # Only reload if it's been more than _token_reload_interval seconds since last reload
-    current_time = time.time()
-    if current_time - _last_token_reload_time > _token_reload_interval:
-        load_dotenv(override=True)  # Force reload of .env file
-        _last_token_reload_time = current_time
+    try:
+        # Try using the new token management from main.py
+        return get_current_access_token()
+    except (ImportError, NameError):
+        # Fallback to old method for backward compatibility
+        global _last_token_reload_time
         
-    access_token = os.getenv("SPOTIFY_ACCESS_TOKEN")
-    if not access_token:
-        print("WARNING: SPOTIFY_ACCESS_TOKEN not found in environment")
-    return access_token
+        current_time = time.time()
+        if current_time - _last_token_reload_time > _token_reload_interval:
+            load_dotenv(override=True)  # Force reload of .env file
+            _last_token_reload_time = current_time
+            
+        access_token = os.getenv("SPOTIFY_ACCESS_TOKEN")
+        if not access_token:
+            print("WARNING: SPOTIFY_ACCESS_TOKEN not found in environment")
+        return access_token
 
 def search_tracks(song_names, user_token=None) -> dict:
     # Use provided token or get latest

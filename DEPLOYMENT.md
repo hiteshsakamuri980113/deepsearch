@@ -42,6 +42,14 @@ REFRESH_TOKEN=your_spotify_refresh_token
 SPOTIFY_ACCESS_TOKEN=your_spotify_access_token
 ```
 
+**⚠️ Important Note About Token Management:**
+
+- The environment variables you set in Render are READ-ONLY at runtime
+- Your frontend will send updated tokens to the backend, but these will be stored IN-MEMORY only
+- The backend is configured to use in-memory tokens when available, falling back to environment variables
+- The initial tokens you set here will be used until a user logs in and updates them
+- For production, consider implementing a proper database-backed token storage solution
+
 ### 1.4 Get Your Backend URL
 
 After deployment, Render will provide you with a URL like:

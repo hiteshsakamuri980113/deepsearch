@@ -91,6 +91,17 @@ export default function NewSearch() {
     };
   }, [showPopup]);
 
+  // Auto-dismiss success banner after 5 seconds
+  useEffect(() => {
+    if (bannerMessage && bannerType === "success") {
+      const timer = setTimeout(() => {
+        setBannerMessage(null);
+      }, 5000); // 5 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [bannerMessage, bannerType]);
+
   // Handle playlist selection
   const handlePlaylistSelect = async (playlistId: string) => {
     try {
