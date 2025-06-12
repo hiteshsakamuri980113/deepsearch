@@ -151,7 +151,7 @@ export default function Agent({}: AgentProps) {
 
           {/* Chat Interface */}
           <iframe
-            src={process.env.AGENT_URL || "http://127.0.0.1:8000"}
+            src={process.env.NEXT_PUBLIC_AGENT_URL || "http://127.0.0.1:8000"}
             title="AI Agent"
             className="w-full h-[calc(100%-40px)] border-none bg-[#1e1e1e] pointer-events-auto"
           />
