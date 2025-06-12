@@ -55,12 +55,15 @@ export async function POST(request: NextRequest) {
       message: "Playlist created successfully!",
       playlistId,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating playlist:", error);
 
     // Log Spotify API error details if available
-    if (error.body && error.body.error) {
-      console.error("Spotify API Error:", error.body.error);
+    if (error && typeof error === "object" && "body" in error) {
+      const spotifyError = error as { body?: { error?: unknown } };
+      if (spotifyError.body && spotifyError.body.error) {
+        console.error("Spotify API Error:", spotifyError.body.error);
+      }
     }
 
     return NextResponse.json(

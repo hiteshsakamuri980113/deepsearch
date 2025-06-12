@@ -3,11 +3,7 @@
 interface SyncDataResponse {
   success: boolean;
   message?: string;
-  data?: any;
-}
-
-interface PlaylistResponse {
-  playlists: any[];
+  data?: unknown;
 }
 
 interface SongDetails {
@@ -44,8 +40,8 @@ interface SpotifyPlaylistResponse {
 
 interface TokenData {
   access_token: string;
-  refresh_token: string;
-  expires_in: number;
+  refresh_token: string | null;
+  expires_in?: number;
 }
 
 export const syncData = async (
@@ -69,13 +65,13 @@ export const syncData = async (
   }
 };
 
-export const fetchPlaylists = async (): Promise<PlaylistResponse> => {
+export const fetchPlaylists = async (): Promise<unknown[]> => {
   try {
     const response = await fetch("/api/playlists");
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const data: PlaylistResponse = await response.json();
+    const data: unknown[] = await response.json();
     return data;
   } catch (error) {
     console.error("Error fetching playlists:", error);
@@ -148,7 +144,7 @@ export const createSpotifyPlaylist = async (
 
 export const sendDataToPythonBackend = async (
   tokenData: TokenData
-): Promise<any> => {
+): Promise<unknown> => {
   try {
     const pythonAgentUrl =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";

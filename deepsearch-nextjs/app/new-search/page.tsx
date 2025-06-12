@@ -28,12 +28,6 @@ interface Filter {
   customValue?: string;
 }
 
-interface Playlist {
-  playlistId: string;
-  name: string;
-  songs: string[];
-}
-
 export default function NewSearch() {
   const dispatch = useDispatch<AppDispatch>();
   const { accessToken } = useSpotifyAuth();
@@ -42,16 +36,12 @@ export default function NewSearch() {
   const {
     items: playlists,
     selectedPlaylist,
-    loading,
     syncMessage,
   } = useSelector((state: RootState) => state.playlists);
 
   // State variables
   const [songs, setSongs] = useState<Song[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
-  const [releaseYears, setReleaseYears] = useState<number[]>([]);
-  const [popularities, setPopularities] = useState<number[]>([]);
-  const [durations, setDurations] = useState<number[]>([]);
   const [filters, setFilters] = useState<Filter[][]>([
     [{ field: "Genre", condition: "", value: "", connector: "" }],
   ]);
@@ -130,15 +120,6 @@ export default function NewSearch() {
 
       // Extract unique values for each metadata field
       setGenres([...new Set(songMetadata.flatMap((song: Song) => song.genre))]);
-      setReleaseYears([
-        ...new Set(songMetadata.map((song: Song) => song.releaseYear)),
-      ]);
-      setPopularities([
-        ...new Set(songMetadata.map((song: Song) => song.popularity)),
-      ]);
-      setDurations([
-        ...new Set(songMetadata.map((song: Song) => song.duration)),
-      ]);
     } catch (error) {
       console.error("Error fetching playlist details:", error);
     }

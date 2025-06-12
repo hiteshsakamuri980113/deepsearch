@@ -8,6 +8,8 @@ import {
 } from "../state/playlistSlice";
 import { useSpotifyAuth } from "../context/SpotifyAuthContext";
 import PrivateRoute from "../components/PrivateRoute";
+import { AppDispatch, RootState } from "../store/globalStore";
+import { Playlist } from "../state/playlistSlice";
 
 // Helper function to format duration in mm:ss
 const formatDuration = (durationInSeconds: number): string => {
@@ -18,13 +20,12 @@ const formatDuration = (durationInSeconds: number): string => {
 
 const Playlists: React.FC = () => {
   const { accessToken } = useSpotifyAuth();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const {
     items: playlists,
     songs,
     loading,
-    syncMessage,
-  } = useSelector((state: any) => state.playlists);
+  } = useSelector((state: RootState) => state.playlists);
 
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
 
@@ -36,23 +37,23 @@ const Playlists: React.FC = () => {
         playlists
       );
       if (accessToken) {
-        dispatch(syncAndUpdatePlaylists(accessToken) as any);
+        dispatch(syncAndUpdatePlaylists(accessToken));
       }
     };
 
     fetchData();
-  }, [accessToken, dispatch]);
+  }, [accessToken, dispatch, playlists]);
 
   // Fetch songs whenever playlists are updated
   useEffect(() => {
     if (playlists.length > 0) {
       const allSongIds = playlists.flatMap(
-        (playlist: any) => playlist.songs || []
+        (playlist: Playlist) => playlist.songs || []
       );
-      dispatch(fetchSongsThunk(allSongIds) as any);
+      dispatch(fetchSongsThunk(allSongIds));
       console.log("songs", songs);
     }
-  }, [playlists, dispatch]);
+  }, [playlists, dispatch, songs]);
 
   // Toggle card expansion
   const toggleCardExpansion = (playlistId: string) => {
@@ -78,11 +79,13 @@ const Playlists: React.FC = () => {
             <p className="text-lg text-gray-400">No playlists found.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-              {playlists.map((playlist: any) => {
-                const isExpanded = expandedCardId === playlist.id;
+              {playlists.map((playlist: Playlist) => {
+                const playlistKey =
+                  playlist.playlistId || playlist._id || "unknown";
+                const isExpanded = expandedCardId === playlistKey;
                 return (
                   <div
-                    key={playlist.id}
+                    key={playlistKey}
                     className="p-8 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 relative bg-[#1e1e1e]"
                   >
                     {/* Playlist Name */}
@@ -102,7 +105,7 @@ const Playlists: React.FC = () => {
                             const song = songs[songId];
                             return song ? (
                               <li
-                                key={`${playlist.id}-${songId}`}
+                                key={`${playlistKey}-${songId}`}
                                 className="p-4 rounded-lg shadow-md transition-colors duration-300 bg-[#2a2a2a] hover:bg-[#3a3a3a]"
                               >
                                 <p className="text-lg font-medium text-white">
@@ -118,7 +121,7 @@ const Playlists: React.FC = () => {
                               </li>
                             ) : (
                               <li
-                                key={`${playlist.id}-${songId}-loading`}
+                                key={`${playlistKey}-${songId}-loading`}
                                 className="p-4 rounded-lg shadow-md text-gray-400 bg-[#2a2a2a]"
                               >
                                 Loading song details...
@@ -143,7 +146,7 @@ const Playlists: React.FC = () => {
                     {/* Toggle Button */}
                     {playlist.songs && playlist.songs.length > 3 && (
                       <button
-                        onClick={() => toggleCardExpansion(playlist.id)}
+                        onClick={() => toggleCardExpansion(playlistKey)}
                         className="mt-2 text-sm flex items-center justify-center w-full text-gray-500 cursor-pointer"
                       >
                         {isExpanded ? (
