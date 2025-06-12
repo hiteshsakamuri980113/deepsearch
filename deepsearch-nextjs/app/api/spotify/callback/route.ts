@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     // Redirect to frontend with tokens
     const redirectUrl = new URL(
       "/new-search",
-      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
     );
     redirectUrl.searchParams.set("access_token", accessToken);
     redirectUrl.searchParams.set("refresh_token", refreshToken);
