@@ -146,7 +146,8 @@ export const sendDataToPythonBackend = async (
   tokenData: TokenData
 ): Promise<unknown> => {
   try {
-    const pythonAgentUrl = process.env.AGENT_URL || "http://localhost:8000";
+    const pythonAgentUrl =
+      process.env.NEXT_PUBLIC_AGENT_URL || "http://localhost:8000";
     const response = await fetch(`${pythonAgentUrl}/api/spotify-data`, {
       method: "POST",
       headers: {
