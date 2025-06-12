@@ -2,13 +2,5 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "framework": "nextjs",
-  "env": {
-    "MONGODB_URI": "@mongodb_uri",
-    "NEXT_PUBLIC_SPOTIFY_CLIENT_ID": "@spotify_client_id",
-    "SPOTIFY_CLIENT_SECRET": "@spotify_client_secret",
-    "NEXT_PUBLIC_API_URL": "@api_url",
-    "JWT_SECRET": "@jwt_secret",
-    "NODE_ENV": "production"
-  }
+  "framework": "nextjs"
 }
