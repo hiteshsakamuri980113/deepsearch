@@ -1,7 +1,9 @@
 "use client";
 import React, { useState, useRef, useCallback, useEffect } from "react";
 
-interface AgentProps {}
+interface AgentProps {
+  // You can add props here if needed in the future
+}
 
 export default function Agent({}: AgentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);

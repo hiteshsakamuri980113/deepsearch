@@ -5,12 +5,16 @@ import { fetchUserThunk } from "../state/userSlice";
 import { useSpotifyAuth } from "../context/SpotifyAuthContext";
 import NavigationBar from "../components/NavigationBar";
 import PrivateRoute from "../components/PrivateRoute";
+import { AppDispatch, RootState } from "../store/globalStore";
+import Image from "next/image";
 
 const Profile: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   // Get user details and loading state from Redux store
-  const { user, loading, error } = useSelector((state: any) => state.user);
+  const { user, loading, error } = useSelector(
+    (state: RootState) => state.user
+  );
 
   // Get access token from SpotifyAuthContext
   const { accessToken } = useSpotifyAuth();
@@ -18,7 +22,7 @@ const Profile: React.FC = () => {
   // Fetch user details when the component mounts or accessToken changes
   useEffect(() => {
     if (accessToken) {
-      dispatch(fetchUserThunk(accessToken) as any);
+      dispatch(fetchUserThunk(accessToken));
     }
   }, [accessToken, dispatch]);
 
@@ -48,9 +52,11 @@ const Profile: React.FC = () => {
           {/* Profile Picture */}
           <div className="flex justify-center mb-6">
             {user?.images && user.images.length > 0 ? (
-              <img
+              <Image
                 src={user.images[0].url}
                 alt="Profile"
+                width={96}
+                height={96}
                 className="w-24 h-24 rounded-full object-cover"
               />
             ) : (

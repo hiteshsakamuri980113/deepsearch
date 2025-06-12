@@ -91,7 +91,7 @@ const playlistSlice = createSlice({
       })
       .addCase(syncAndUpdatePlaylists.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
+        state.items = action.payload as Playlist[];
         state.syncMessage = "Playlists synced successfully!";
       })
       .addCase(syncAndUpdatePlaylists.rejected, (state, action) => {
@@ -105,7 +105,7 @@ const playlistSlice = createSlice({
       })
       .addCase(fetchPlaylistsThunk.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
+        state.items = action.payload as Playlist[];
       })
       .addCase(fetchPlaylistsThunk.rejected, (state, action) => {
         state.loading = false;
@@ -119,7 +119,20 @@ const playlistSlice = createSlice({
         state.loading = false;
         // Store songs in object format for easy lookup
         const songsObject: Record<string, Song> = {};
-        action.payload.forEach((song: Song) => {
+        action.payload.forEach((songDetail: unknown) => {
+          // Map SongDetails to Song format
+          const detail = songDetail as any; // Temporary cast for migration
+          const song: Song = {
+            songId: detail.id,
+            songName: detail.name,
+            artists: [detail.artist], // Convert single artist to array
+            genre: [], // Will be filled from database
+            playlistId: "", // Will be filled when needed
+            albumId: detail.album || "",
+            releaseYear: 0, // Will be filled from database
+            popularity: detail.popularity || 0,
+            duration: Math.floor(detail.duration_ms / 1000), // Convert ms to seconds
+          };
           songsObject[song.songId] = song;
         });
         state.songs = { ...state.songs, ...songsObject };
