@@ -3,6 +3,7 @@ import json
 import asyncio
 import requests
 import uvicorn
+import time
 
 from pathlib import Path
 from dotenv import load_dotenv
@@ -31,6 +32,49 @@ load_dotenv()
 APP_NAME="custom streaming app"
 session_service = InMemorySessionService()
 
+# Global token storage (in-memory) for production deployment
+current_tokens = {
+    "access_token": None,
+    "refresh_token": None,
+    "updated_at": None
+}
+
+def update_tokens_in_memory(access_token: str = None, refresh_token: str = None):
+    """Update tokens in memory instead of .env file"""
+    global current_tokens
+    
+    if access_token:
+        current_tokens["access_token"] = access_token
+        print(f"Updated access token in memory")
+    
+    if refresh_token:
+        current_tokens["refresh_token"] = refresh_token
+        print(f"Updated refresh token in memory")
+    
+    current_tokens["updated_at"] = time.time()
+
+def get_current_access_token():
+    """Get the most recent access token"""
+    global current_tokens
+    
+    # First try in-memory token
+    if current_tokens["access_token"]:
+        return current_tokens["access_token"]
+    
+    # Fallback to environment variable
+    return os.environ.get("SPOTIFY_ACCESS_TOKEN")
+
+def get_current_refresh_token():
+    """Get the most recent refresh token"""
+    global current_tokens
+    
+    # First try in-memory token
+    if current_tokens["refresh_token"]:
+        return current_tokens["refresh_token"]
+    
+    # Fallback to environment variable
+    return os.environ.get("REFRESH_TOKEN")
+
 # Create the FastAPI app
 app = FastAPI()
 
@@ -46,6 +90,50 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Global token storage (in-memory)
+current_tokens = {
+    "access_token": None,
+    "refresh_token": None,
+    "updated_at": None
+}
+
+def update_tokens_in_memory(access_token: str = None, refresh_token: str = None):
+    """Update tokens in memory instead of .env file"""
+    global current_tokens
+    import time
+    
+    if access_token:
+        current_tokens["access_token"] = access_token
+        print(f"Updated access token in memory")
+    
+    if refresh_token:
+        current_tokens["refresh_token"] = refresh_token
+        print(f"Updated refresh token in memory")
+    
+    current_tokens["updated_at"] = time.time()
+
+def get_current_access_token():
+    """Get the most recent access token"""
+    global current_tokens
+    
+    # First try in-memory token
+    if current_tokens["access_token"]:
+        return current_tokens["access_token"]
+    
+    # Fallback to environment variable
+    return os.environ.get("SPOTIFY_ACCESS_TOKEN")
+
+def get_current_refresh_token():
+    """Get the most recent refresh token"""
+    global current_tokens
+    
+    # First try in-memory token
+    if current_tokens["refresh_token"]:
+        return current_tokens["refresh_token"]
+    
+    # Fallback to environment variable
+    return os.environ.get("REFRESH_TOKEN")
 
 async def start_agent_session(session_id: str):
     """Starts an agent session"""
@@ -203,9 +291,11 @@ async def receive_spotify_data(data: SpotifyData):
         # Update environment variables with the new tokens
         if data.access_token:
             update_env_file("SPOTIFY_ACCESS_TOKEN", data.access_token)
+            update_tokens_in_memory(access_token=data.access_token)
         
         if data.refresh_token:
             update_env_file("REFRESH_TOKEN", data.refresh_token)
+            update_tokens_in_memory(refresh_token=data.refresh_token)
             
         # You can process playlist_data here if needed
         
