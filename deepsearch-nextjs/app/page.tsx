@@ -49,14 +49,14 @@ export default function LandingPage() {
         <div className="w-1/2 flex flex-col justify-center">
           <h1 className="text-4xl font-bold">Find Your Music, Your Way</h1>
           <p className="mt-4 text-lg">
-            Tired of scrolling endlessly to find the perfect songs for your
-            Spotify playlists? Deep Search gives you powerful filtering tools to
-            search your music by genre, tempo, release year, and more.
+            Deep Search lets you filter your Spotify playlists by genre,
+            release year, popularity and duration, then save the results as a
+            new playlist.
           </p>
           <ul className="mt-4 space-y-2">
-            <li>🔍 Search deeper.</li>
-            <li>💿 Discover more.</li>
-            <li>🎵 Play exactly what you want.</li>
+            <li>Search deeper.</li>
+            <li>Discover more.</li>
+            <li>Play exactly what you want.</li>
           </ul>
           <p className="mt-6">Get started by logging in with Spotify!</p>
           <button

@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide will help you deploy the DeepSearch application to production using Render (for the Python backend) and Vercel (for the Next.js frontend).
+How to deploy DeepSearch: the Python agent on Render and the Next.js app on Vercel, with MongoDB on Atlas.
 
 ## Prerequisites
 
@@ -42,13 +42,13 @@ REFRESH_TOKEN=your_spotify_refresh_token
 SPOTIFY_ACCESS_TOKEN=your_spotify_access_token
 ```
 
-**⚠️ Important Note About Token Management:**
+**A note on Spotify tokens** (more detail in [TOKEN_MANAGEMENT.md](TOKEN_MANAGEMENT.md)):
 
-- The environment variables you set in Render are READ-ONLY at runtime
-- Your frontend will send updated tokens to the backend, but these will be stored IN-MEMORY only
-- The backend is configured to use in-memory tokens when available, falling back to environment variables
-- The initial tokens you set here will be used until a user logs in and updates them
-- For production, consider implementing a proper database-backed token storage solution
+- The app can't change environment variables set in the Render dashboard while it is running.
+- The web app sends the logged-in user's tokens to the agent, and the agent keeps them in memory.
+- The agent uses the in-memory tokens when it has them and falls back to the environment variables otherwise.
+- The in-memory tokens are lost when the service restarts, and the dashboard tokens expire, so users may need to log in again.
+- For more than one user, tokens would need to be stored per user in a database.
 
 ### 1.4 Get Your Backend URL
 
@@ -101,6 +101,7 @@ MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/deepsearch?retry
 NEXT_PUBLIC_SPOTIFY_CLIENT_ID=your_spotify_client_id
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
 NEXT_PUBLIC_API_URL=https://your-render-app-name.onrender.com
+NEXT_PUBLIC_AGENT_URL=https://your-render-app-name.onrender.com
 JWT_SECRET=your_secure_random_jwt_secret
 SPOTIFY_REDIRECT_URI=https://your-vercel-app.vercel.app/api/spotify/callback
 NEXT_PUBLIC_APP_URL=https://your-vercel-app.vercel.app
@@ -166,6 +167,7 @@ MONGODB_URI=your_mongodb_connection_string
 NEXT_PUBLIC_SPOTIFY_CLIENT_ID=your_spotify_client_id
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
 NEXT_PUBLIC_API_URL=https://your-render-app.onrender.com
+NEXT_PUBLIC_AGENT_URL=https://your-render-app.onrender.com
 JWT_SECRET=your_jwt_secret
 SPOTIFY_REDIRECT_URI=https://your-vercel-app.vercel.app/api/spotify/callback
 NEXT_PUBLIC_APP_URL=https://your-vercel-app.vercel.app
@@ -199,4 +201,4 @@ NODE_ENV=production
 - **Vercel Free**: 100GB bandwidth, 1000 serverless function invocations per month
 - **MongoDB Atlas Free**: 512MB storage, no backup
 
-For production use, consider upgrading to paid plans for better performance and reliability.
+The free tiers are enough for a demo. The Render sleep delay is the one you will notice most.

@@ -3,7 +3,7 @@
 # DeepSearch Deployment Helper Script
 # This script helps you deploy the application step by step
 
-echo "🚀 DeepSearch Deployment Helper"
+echo "DeepSearch Deployment Helper"
 echo "==============================="
 echo ""
 
@@ -23,7 +23,7 @@ if [ "$ready" != "y" ]; then
 fi
 
 echo ""
-echo "📋 Deployment Checklist:"
+echo "Deployment Checklist:"
 echo "========================"
 echo ""
 
@@ -103,7 +103,7 @@ echo ""
 read -p "Press Enter when environment variables are set..."
 
 echo ""
-echo "✅ Deployment Complete!"
+echo "Deployment Complete!"
 echo "======================"
 echo ""
 echo "Your app should now be live at: $frontend_url"
@@ -116,4 +116,4 @@ echo "3. Test playlist sync and creation"
 echo ""
 echo "If you encounter issues, check the deployment guide: ./docs/DEPLOYMENT.md"
 echo ""
-echo "🎉 Happy coding!"
+echo "Happy coding!"

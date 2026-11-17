@@ -1,200 +1,30 @@
-# Token Management in Production Deployment
+# How the agent gets Spotify tokens
 
-## The Problem You Identified 🚨
+The chat agent (`agent/ad-streaming`) creates playlists with the logged-in user's Spotify access token. This note covers how the token reaches the agent and what that means when it is deployed.
 
-You're absolutely correct to be concerned! When you deploy to Render, the environment variables you set in the dashboard **will NOT** be updated by your frontend calls. Here's why:
+## The flow
 
-### Why Environment Variables Can't Be Updated on Render
+1. The user logs in through the Next.js app, which gets an access token and a refresh token from Spotify.
+2. The web app posts them to the agent at `POST /api/spotify-data`.
+3. The agent keeps them in two places:
+   - an in-memory dictionary (`current_tokens` in `main.py`)
+   - the local `.env` file, through `update_env_file()`
+4. When a tool in `spotify_agent/agent.py` needs a token, it calls `get_current_access_token()`. That returns the in-memory token if there is one, and otherwise falls back to the `SPOTIFY_ACCESS_TOKEN` environment variable. The refresh token works the same way with `REFRESH_TOKEN`.
 
-1. **Read-Only Environment**: Environment variables on cloud platforms like Render are part of the deployment configuration and are read-only at runtime.
+## Why this matters on Render
 
-2. **Container Limitations**: Your app runs in a container with a read-only file system for most directories.
+Environment variables set in the Render dashboard can't be changed by the running app, so the agent can't update them. Any change to the `.env` file only lasts until the service restarts or redeploys. So in production the in-memory copy is the only thing that stays current, and it is lost on every restart. After a restart the agent falls back to whatever tokens are set in the dashboard, and those expire.
 
-3. **Process Separation**: Environment variables are loaded when the process starts and cannot be modified by the running application.
+In practice, after a restart or a long idle period (Render's free tier sleeps), the user has to log in again before the agent can create playlists.
 
-4. **No `.env` File**: The `update_env_file()` function in your code tries to write to a `.env` file, which won't exist or be writable on Render.
+## Limitations
 
-## What Happens Without a Fix
+- **One shared token.** The agent holds a single token, so the last user to log in replaces everyone else's. That is fine for a personal project or a demo, but it is not safe for multiple users.
+- **Tokens are lost on restart.** See above.
+- **No refresh.** The agent stores a refresh token but doesn't use it to get a new access token, so an expired access token means logging in again.
 
-```python
-# This function will FAIL on Render
-def update_env_file(key: str, value: str, env_file_path: str = ".env"):
-    # ❌ This file won't exist or be writable on Render
-    with open(env_path, "w") as file:
-        file.writelines(lines)
-```
+## What I would change for real multi-user use
 
-**Result**:
-
-- Your AI agent will use stale tokens from the environment variables
-- Users will get authentication errors after their tokens expire
-- The frontend token updates will be ignored
-
-## The Solution We Implemented ✅
-
-### 1. In-Memory Token Storage
-
-We added a global in-memory token storage system:
-
-```python
-# Global token storage (in-memory) for production deployment
-current_tokens = {
-    "access_token": None,
-    "refresh_token": None,
-    "updated_at": None
-}
-
-def update_tokens_in_memory(access_token: str = None, refresh_token: str = None):
-    """Update tokens in memory instead of .env file"""
-    global current_tokens
-
-    if access_token:
-        current_tokens["access_token"] = access_token
-        print(f"Updated access token in memory")
-
-    if refresh_token:
-        current_tokens["refresh_token"] = refresh_token
-        print(f"Updated refresh token in memory")
-
-    current_tokens["updated_at"] = time.time()
-
-def get_current_access_token():
-    """Get the most recent access token"""
-    global current_tokens
-
-    # First try in-memory token (from frontend updates)
-    if current_tokens["access_token"]:
-        return current_tokens["access_token"]
-
-    # Fallback to environment variable (initial deployment)
-    return os.environ.get("SPOTIFY_ACCESS_TOKEN")
-```
-
-### 2. Updated API Endpoint
-
-The `/api/spotify-data` endpoint now updates both systems:
-
-```python
-@app.post("/api/spotify-data")
-async def receive_spotify_data(data: SpotifyData):
-    try:
-        # For production: use in-memory storage
-        # For local dev: still update .env file
-        is_production = os.environ.get("NODE_ENV") == "production" or os.environ.get("RENDER") == "true"
-
-        if is_production:
-            # ✅ This works on Render
-            update_tokens_in_memory(
-                access_token=data.access_token,
-                refresh_token=data.refresh_token
-            )
-        else:
-            # ✅ This works locally
-            if data.access_token:
-                update_env_file("SPOTIFY_ACCESS_TOKEN", data.access_token)
-
-            if data.refresh_token:
-                update_env_file("REFRESH_TOKEN", data.refresh_token)
-```
-
-### 3. Updated Agent Code
-
-The AI agent now uses the improved token system:
-
-```python
-def get_latest_access_token():
-    try:
-        # ✅ Uses in-memory tokens when available
-        return get_current_access_token()
-    except (ImportError, NameError):
-        # ✅ Fallback to old method for local development
-        load_dotenv(override=True)
-        return os.getenv("SPOTIFY_ACCESS_TOKEN")
-```
-
-## How It Works Now
-
-### Development (Local)
-
-1. Frontend sends tokens → Backend updates `.env` file ✅
-2. AI agent reads from `.env` file ✅
-3. Tokens persist between server restarts ✅
-
-### Production (Render)
-
-1. Frontend sends tokens → Backend stores in memory ✅
-2. AI agent reads from memory first, then environment variables ✅
-3. Tokens persist during server uptime ⚠️ (lost on restart)
-
-## Limitations of This Solution
-
-### ⚠️ Token Loss on Restart
-
-- In-memory tokens are lost when the Render container restarts
-- Users will need to re-authenticate after restarts
-- Initial environment variables will be used until someone logs in
-
-### ⚠️ Shared Tokens
-
-- All users will share the same in-memory token storage
-- The last user to log in will overwrite previous tokens
-- This is only suitable for single-user or demo applications
-
-## Better Production Solutions
-
-For a production application with multiple users, consider:
-
-### Option 1: Database Token Storage
-
-```python
-# Store tokens in MongoDB with user association
-class UserToken(BaseModel):
-    user_id: str
-    access_token: str
-    refresh_token: str
-    expires_at: datetime
-    updated_at: datetime
-```
-
-### Option 2: Redis Cache
-
-```python
-# Use Redis for fast token storage and retrieval
-import redis
-redis_client = redis.Redis.from_url(os.environ.get("REDIS_URL"))
-
-def store_user_token(user_id: str, token: str):
-    redis_client.setex(f"token:{user_id}", 3600, token)
-```
-
-### Option 3: Encrypted Environment Updates
-
-```python
-# Use Render's API to update environment variables (advanced)
-# Requires API keys and careful implementation
-```
-
-## Testing the Fix
-
-### Local Development
-
-1. Start your backend: `python main.py`
-2. Check that `.env` file updates still work
-3. Verify AI agent can access updated tokens
-
-### Production Testing
-
-1. Deploy to Render
-2. Log in through frontend
-3. Check Render logs to see "Updated access token in memory"
-4. Test AI agent functionality
-5. Verify it works even with stale environment variables
-
-## Summary
-
-✅ **Your concern was valid** - environment variables cannot be updated on Render
-✅ **We implemented a working solution** - in-memory token storage for production
-⚠️ **Limitations exist** - tokens lost on restart, shared between users
-🚀 **For production apps** - consider database or Redis-based token storage
-
-The current solution will work for your deployment and handle the token update issue you identified!
+- Store tokens per user in MongoDB, with an expiry time, instead of one global value.
+- Have the agent request a fresh access token from Spotify with the refresh token when the current one has expired.
+- Keep the token out of the agent entirely: the web app could make the Spotify calls and the agent would only suggest the songs.
