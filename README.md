@@ -30,7 +30,7 @@ Browser ── Next.js app (Vercel) ──┬── Spotify Web API
 
 **Agent:** Python 3.11, FastAPI, Google ADK with Gemini 2.0 Flash, the `google_search` tool
 
-**Data and hosting:** MongoDB, Vercel for the web app, Render for the agent (see [DEPLOYMENT.md](DEPLOYMENT.md))
+**Data and hosting:** MongoDB, Vercel for the web app, Render for the agent (see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md))
 
 ## Running it locally
 
@@ -106,7 +106,7 @@ The agent runs on http://localhost:8000. Log in to the web app first. The web ap
 
 ## Known limitations
 
-- The agent stores the Spotify tokens it receives in memory and tries to write them to a `.env` file. That works locally, but on a host with a read-only filesystem like Render only the in-memory copy is kept, so a restart loses it. [TOKEN_MANAGEMENT.md](TOKEN_MANAGEMENT.md) goes into this.
+- The agent stores the Spotify tokens it receives in memory and tries to write them to a `.env` file. That works locally, but on a host with a read-only filesystem like Render only the in-memory copy is kept, so a restart loses it. [docs/TOKEN_MANAGEMENT.md](docs/TOKEN_MANAGEMENT.md) goes into this.
 - Playlists in MongoDB are not scoped per user. This is fine for a single-user project, but it would need a user ID on the playlist records before it could be shared.
 - Genres come from the song's artists, since Spotify doesn't give genres per track. Songs by artists with no genres listed won't match a genre filter.
 - No automated tests yet.
