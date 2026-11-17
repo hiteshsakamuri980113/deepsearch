@@ -1,203 +1,112 @@
-# DeepSearch 🎵
+# DeepSearch
 
-**AI-Powered Music Discovery and Playlist Management**
+DeepSearch lets you filter your own Spotify playlists by genre, release year, popularity and duration, and then turn the filtered songs into a new Spotify playlist. There is also a chat assistant that can search the web for music information and create playlists from a description.
 
-DeepSearch is a sophisticated music application that combines the power of Spotify's extensive music library with intelligent filtering and AI assistance to help you discover, organize, and create the perfect playlists.
+## What it does
 
-## 🌟 Features
+- Log in with Spotify (OAuth). The app asks for permission to read and modify your playlists.
+- Sync your playlists into MongoDB. For each song it stores the name, artists, release year, duration and popularity, plus genres taken from the song's artists.
+- Pick a playlist and build filters on genre, release year, popularity and duration. Filters can be joined with AND or OR, and applying them gives you the list of matching songs.
+- Name the result and create it as a new playlist in your Spotify account.
+- Chat with an assistant that runs on Gemini 2.0 Flash. It searches the web for music questions (charts, awards, new releases) and can create a Spotify playlist for you. The chat is hidden on the home page and available everywhere else.
+- Profile page showing your Spotify account details.
 
-### Core Functionality
+## How it fits together
 
-**🔍 Advanced Music Filtering**
-
-- Filter your Spotify playlists by multiple criteria simultaneously
-- Filter by **Genre**, **Release Year**, **Popularity Score**, and **Duration**
-- Support for complex filter combinations with AND/OR logic
-- Real-time filtering with instant results
-
-**🎵 Smart Playlist Management**
-
-- Automatic sync with your Spotify playlists
-- View detailed song metadata including artists, duration, and release year
-- Create new Spotify playlists directly from filtered results
-- Browse and manage all your playlists in one place
-
-**🤖 AI Music Assistant**
-
-- Integrated AI agent powered by Google's Gemini 2.0 Flash
-- Real-time web search for current music information
-- Create playlists by describing what you want
-- Get music recommendations and discover new artists
-- Ask questions about songs, artists, charts, and music trends
-
-### Technical Capabilities
-
-**📊 Rich Music Metadata**
-
-- Detailed song information including genre, popularity scores, and audio features
-- Artist information and album details
-- Release year tracking and filtering
-- Duration-based searching and sorting
-
-**🔄 Real-Time Synchronization**
-
-- Seamless sync between the app and your Spotify account
-- Automatic playlist updates when you make changes
-- Live token management for uninterrupted access
-
-**💾 Persistent Data Storage**
-
-- MongoDB integration for reliable data persistence
-- Efficient caching of playlist and song metadata
-- Fast search and filtering operations
-
-## 🛠️ Technology Stack
-
-### Frontend (Next.js)
-
-- **Framework**: Next.js 15.3.3 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **State Management**: Redux Toolkit
-- **UI**: Custom responsive design with modern aesthetics
-
-### Backend (Python)
-
-- **Framework**: FastAPI with uvicorn
-- **AI Integration**: Google Gemini 2.0 Flash via ADK
-- **Real-time**: WebSocket support for AI chat
-- **API Integration**: Spotify Web API
-
-### Database & Services
-
-- **Database**: MongoDB with Mongoose ODM
-- **Authentication**: Spotify OAuth 2.0
-- **APIs**: Spotify Web API, Google Search API
-- **Deployment**: Vercel (Frontend) + Render (Backend)
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18+ and npm
-- Python 3.11+
-- Spotify Developer Account
-- MongoDB instance
-- Google API Key (for AI features)
-
-### Local Development
-
-1. **Clone the repository**
-
-   ```bash
-   git clone <repository-url>
-   cd deepsearch
-   ```
-
-2. **Setup Frontend**
-
-   ```bash
-   cd deepsearch-nextjs
-   npm install
-   cp .env.example .env.local
-   # Configure your environment variables
-   npm run dev
-   ```
-
-3. **Setup Backend**
-
-   ```bash
-   cd agent/ad-streaming
-   pip install -r requirements.txt
-   cp .env.example .env
-   # Configure your environment variables
-   python main.py
-   ```
-
-4. **Configure Spotify App**
-   - Create a Spotify app at [developer.spotify.com](https://developer.spotify.com)
-   - Set redirect URI to `http://localhost:3000/api/spotify/callback`
-   - Add your client ID and secret to environment variables
-
-## 📱 How to Use
-
-### 1. Authentication
-
-- Connect your Spotify account using the "Login with Spotify" button
-- Grant necessary permissions for playlist access and management
-
-### 2. Playlist Filtering
-
-- Select any of your existing Spotify playlists
-- Apply filters by genre, release year, popularity, or duration
-- Combine multiple filters with AND/OR logic
-- View filtered results in real-time
-
-### 3. Create New Playlists
-
-- After filtering songs, click "Create Spotify Playlist"
-- Enter a name for your new playlist
-- The playlist will be created in your Spotify account with the filtered songs
-
-### 4. AI Assistant
-
-- Click the "Chat with Agent" button (available on all pages except home)
-- Ask for music recommendations, create playlists by description
-- Get information about current music trends, charts, and artists
-- The AI can search the web for up-to-date music information
-
-## 🔧 Configuration
-
-### Environment Variables
-
-**Frontend (.env.local)**
-
-```env
-MONGODB_URI=your_mongodb_connection_string
-NEXT_PUBLIC_SPOTIFY_CLIENT_ID=your_spotify_client_id
-SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-NEXT_PUBLIC_API_URL=http://localhost:8000
-JWT_SECRET=your_jwt_secret
-SPOTIFY_REDIRECT_URI=http://localhost:3000/api/spotify/callback
+```
+Browser ── Next.js app (Vercel) ──┬── Spotify Web API
+                                  ├── MongoDB (playlists and song metadata)
+                                  └── iframe ── Python agent (FastAPI, Render)
+                                                  └── Gemini 2.0 Flash + Google Search
+                                                      + Spotify tools
 ```
 
-**Backend (.env)**
+- `deepsearch-nextjs/` is the web app. Its API routes (`app/api/`) talk to Spotify and MongoDB.
+- `agent/ad-streaming/` is the Python service for the chat. It serves a small chat page that the web app embeds in an iframe, and the page talks to the agent over a WebSocket (`/ws/{session_id}`). The web app sends the user's Spotify tokens to the agent at `/api/spotify-data` so the agent can create playlists on their behalf.
+
+## Tech stack
+
+**Web app:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Redux Toolkit, Mongoose, spotify-web-api-node
+
+**Agent:** Python 3.11, FastAPI, Google ADK with Gemini 2.0 Flash, the `google_search` tool
+
+**Data and hosting:** MongoDB, Vercel for the web app, Render for the agent (see [DEPLOYMENT.md](DEPLOYMENT.md))
+
+## Running it locally
+
+You need Node 18+, Python 3.11+, a MongoDB database, a Spotify developer app and a Google API key.
+
+### 1. Spotify app
+
+Create an app at [developer.spotify.com](https://developer.spotify.com) and add this redirect URI:
+
+```
+http://localhost:3000/api/spotify/callback
+```
+
+### 2. Web app
+
+```bash
+cd deepsearch-nextjs
+npm install
+```
+
+Create `deepsearch-nextjs/.env.local`:
+
+```env
+MONGODB_URI=<your MongoDB connection string>
+NEXT_PUBLIC_SPOTIFY_CLIENT_ID=<Spotify client ID>
+SPOTIFY_CLIENT_SECRET=<Spotify client secret>
+SPOTIFY_REDIRECT_URI=http://localhost:3000/api/spotify/callback
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_AGENT_URL=http://localhost:8000
+JWT_SECRET=<any long random string>
+```
+
+```bash
+npm run dev
+```
+
+The app runs on http://localhost:3000.
+
+### 3. Agent
+
+```bash
+cd agent/ad-streaming
+pip install -r requirements.txt
+```
+
+Create `agent/ad-streaming/.env`:
 
 ```env
 GOOGLE_GENAI_USE_VERTEXAI=FALSE
-GOOGLE_API_KEY=your_google_api_key
-SPOTIFY_CLIENT_ID=your_spotify_client_id
-SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+GOOGLE_API_KEY=<your Google API key>
+SPOTIFY_CLIENT_ID=<Spotify client ID>
+SPOTIFY_CLIENT_SECRET=<Spotify client secret>
 ```
 
-## 🌐 Deployment
+```bash
+python main.py
+```
 
-For production deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md) which includes:
+The agent runs on http://localhost:8000. Log in to the web app first. The web app sends your Spotify token to the agent, and the agent needs it before it can create playlists.
 
-- Render deployment for Python backend
-- Vercel deployment for Next.js frontend
-- MongoDB Atlas setup
-- Environment configuration for production
+## API routes (web app)
 
-## 🎯 Use Cases
+| Route | Purpose |
+|---|---|
+| `GET /api/spotify/auth` | Start the Spotify login |
+| `GET /api/spotify/callback` | Finish the login |
+| `POST /api/spotify/logout` | Log out |
+| `GET /api/user` | Spotify profile for the logged-in user |
+| `GET /api/playlists/sync` | Sync Spotify playlists and their songs into MongoDB |
+| `GET /api/playlists`, `/api/playlists/[playlistId]` | Playlists and one playlist's songs |
+| `GET /api/songs/[songId]` | One song's stored metadata |
+| `POST /api/playlists/create-playlist` | Create a Spotify playlist from the filtered songs |
 
-- **Music Discovery**: Find songs in your library that match specific moods or criteria
-- **Playlist Curation**: Create themed playlists using advanced filtering
-- **Music Research**: Get current information about artists, songs, and trends
-- **Smart Organization**: Better organize your extensive music library
-- **AI-Powered Recommendations**: Discover new music through intelligent suggestions
+## Known limitations
 
-## 🔒 Privacy & Security
-
-- Uses official Spotify OAuth for secure authentication
-- No storage of Spotify passwords or sensitive credentials
-- Playlist data is synced and cached locally for performance
-- AI interactions are processed securely through Google's API
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit issues and enhancement requests.
-
----
-
-**Built with ❤️ for music lovers who want more control over their listening experience.**
+- The agent stores the Spotify tokens it receives in memory and tries to write them to a `.env` file. That works locally, but on a host with a read-only filesystem like Render only the in-memory copy is kept, so a restart loses it. [TOKEN_MANAGEMENT.md](TOKEN_MANAGEMENT.md) goes into this.
+- Playlists in MongoDB are not scoped per user. This is fine for a single-user project, but it would need a user ID on the playlist records before it could be shared.
+- Genres come from the song's artists, since Spotify doesn't give genres per track. Songs by artists with no genres listed won't match a genre filter.
+- No automated tests yet.

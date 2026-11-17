@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DeepSearch web app
 
-## Getting Started
+The Next.js part of DeepSearch. The main project README is [one level up](../README.md), including setup for the Python chat agent.
 
-First, run the development server:
+## Run it
+
+```bash
+npm install
+```
+
+Create `.env.local` (see the main README for what each value is):
+
+```env
+MONGODB_URI=
+NEXT_PUBLIC_SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
+SPOTIFY_REDIRECT_URI=http://localhost:3000/api/spotify/callback
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_AGENT_URL=http://localhost:8000
+JWT_SECRET=
+```
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | What it does |
+|---|---|
+| `npm run dev` | Dev server (Turbopack) |
+| `npm run dev-normal` | Dev server without Turbopack |
+| `npm run build` | Production build |
+| `npm start` | Run the production build |
+| `npm run lint` | ESLint |
 
-## Learn More
+## Structure
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `app/page.tsx` is the home page with the Spotify login.
+- `app/new-search/` is the filter page. It has the playlist picker, the filter builder and playlist creation.
+- `app/playlists/` lists your synced playlists.
+- `app/profile/` shows your Spotify profile.
+- `app/api/` has the route handlers for Spotify auth, playlist sync, songs and playlist creation.
+- `app/components/Agent.tsx` is the chat button. It opens the Python agent in an iframe.
+- `app/state/` and `app/store/` hold the Redux Toolkit slices and store.
+- `models/` has the Mongoose schemas for playlists and songs.
+- `lib/` has the MongoDB connection, the Spotify client and environment config.
